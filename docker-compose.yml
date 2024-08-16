@@ -6,8 +6,12 @@ services:
 
   mongodb:
     image: mongo:7.0.12
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=57b0005d-2879-4354-adf2-64b41e943193
     ports:
-      - '27017:27017'
+      - 27017:27017
     volumes:
       - <replace-me>:/data/db
     networks:
