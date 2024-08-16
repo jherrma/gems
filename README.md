@@ -1,2 +1,2 @@
-# gems
+# Gems
 A gematria service
