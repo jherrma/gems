@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/jherrma/gems/config"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,28 +25,32 @@ func closeMongoConnection(client *mongo.Client) {
 	}
 }
 
-func ensureMongoDbIsSetUp(client *mongo.Client) {
+func ensureMongoDbIsSetUp(ctx context.Context, client *mongo.Client) {
+	err := client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal("could not ping mongo db!")
+	}
 	//database := client.Database(DATABASE)
 
 	// create indicies
 }
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+	ctx := context.Background()
 
-	uri := os.Getenv("MONGODB_URI")
+	_ = godotenv.Load()
+
+	uri := os.Getenv(config.MONGODB_URI)
 	if uri == "" {
 		log.Fatal("Set your 'MONGODB_URI' environment variable. See: www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
 
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
 	defer closeMongoConnection(client)
-	ensureMongoDbIsSetUp(client)
+	ensureMongoDbIsSetUp(ctx, client)
 
 	app := fiber.New()
 
@@ -51,5 +58,14 @@ func main() {
 		return c.SendString("Hello, World!")
 	})
 
-	app.Listen(":3000")
+	port := os.Getenv(config.SERVER_PORT)
+	if port == "" {
+		log.Fatal("PORT for server must be set!")
+	}
+
+	if !strings.HasPrefix(port, ":") {
+		port = fmt.Sprintf(":%s", port)
+	}
+
+	app.Listen(port)
 }

@@ -1,4 +1,4 @@
-module github.com/jherrma/gems/src
+module github.com/jherrma/gems
 
 go 1.23
 
