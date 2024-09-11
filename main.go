@@ -9,31 +9,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/jherrma/gems/config"
+	"github.com/jherrma/gems/handlers"
+	"github.com/jherrma/gems/services"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const (
-	DATABASE                = "gems"
-	LATIN_PHRASE_COLLECTION = "latin-phrases"
-)
-
-func closeMongoConnection(client *mongo.Client) {
-	if err := client.Disconnect(context.Background()); err != nil {
-		panic(err)
-	}
-}
-
-func ensureMongoDbIsSetUp(ctx context.Context, client *mongo.Client) {
-	err := client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal("could not ping mongo db!")
-	}
-	//database := client.Database(DATABASE)
-
-	// create indicies
-}
 
 func main() {
 	ctx := context.Background()
@@ -49,14 +30,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer closeMongoConnection(client)
-	ensureMongoDbIsSetUp(ctx, client)
+
+	mongoDb := services.NewMongoDb(client)
+	defer mongoDb.Close()
+	mongoDb.EnsureMongoDbIsSetUp()
 
 	app := fiber.New()
 
 	app.Get("/", func(c fiber.Ctx) error {
-		return c.SendString("Hello, World!")
+		return c.SendString("")
 	})
+
+	app.Post("/api/gem", handlers.InsertGem(mongoDb))
+	app.Get("/api/list", handlers.GetList(mongoDb))
 
 	port := os.Getenv(config.SERVER_PORT)
 	if port == "" {
