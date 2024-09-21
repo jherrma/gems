@@ -42,6 +42,8 @@ func main() {
 	})
 
 	app.Post("/api/gem", handlers.InsertGem(mongoDb))
+	app.Post("/api/phrase", handlers.InsertPhrase(mongoDb))
+	app.Post("/api/nearestItems", handlers.GetNearesItems(mongoDb))
 	app.Get("/api/list", handlers.GetList(mongoDb))
 
 	port := os.Getenv(config.SERVER_PORT)

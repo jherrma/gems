@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/jherrma/gems/config"
 	"github.com/jherrma/gems/models"
@@ -41,6 +42,8 @@ func (m *MongoDb) EnsureMongoDbIsSetUp() {
 func (m *MongoDb) InsertGem(gem *models.Gem) error {
 	collection := m.GetCollection(config.LATIN_PHRASE_COLLECTION)
 
+	gem.Phrase = strings.ToLower(gem.Phrase)
+
 	result, err := collection.CountDocuments(context.Background(), bson.M{"phrase": gem.Phrase})
 	if err != nil {
 		return err
@@ -57,6 +60,7 @@ func (m *MongoDb) InsertGem(gem *models.Gem) error {
 func (m *MongoDb) GetGem(phrase string) (*models.Gem, error) {
 	collection := m.GetCollection(config.LATIN_PHRASE_COLLECTION)
 
+	phrase = strings.ToLower(phrase)
 	result := models.Gem{}
 	err := collection.FindOne(context.Background(), bson.M{"phrase": phrase}).Decode(&result)
 	return &result, err
